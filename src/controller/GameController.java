@@ -1,45 +1,54 @@
+/**
+ * Geister v3.0
+ *
+ * Copyright (c) 2016 tatsumi
+ *
+ * This software is released under the MIT License.
+ * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
+ */
 package controller;
 
-import java.io.IOException;
 
-import communication.Exchanger;
+import ai.AI;
+import ai.Hand;
 import model.Board;
 import model.Direction;
 import model.Ghost;
-import view.GamePanel;
+import view.GamePlayer;
 
 
-/**
- * @since Geister 1.0
- * @author tatsumi
- */
 public class GameController implements Runnable {
-	private GamePanel panel;
+	/*
+	 * ゲーム情報
+	 */
 	private Board board;
+	private boolean isPlaying;
 	private boolean isMyTurn;
 
-	private static int ghostSize = 8;
-
-	private boolean isPlaying;
-
+	/*
+	 * プレイヤー情報
+	 */
+	private GamePlayer player;
 	private String username;
 
 	/*
-	 * 通信関連
+	 * AI情報
 	 */
-	private boolean isServer;
+	private AI ai;
+	private Board boardAI;
+	private boolean isMyTurnAI;
 
-	private Exchanger exchanger;
 
-
-	public GameController(Exchanger exchanger) {
+	public GameController(GamePlayer player) {
 		board = new Board();
 		isMyTurn = false;
 		isPlaying = true;
 		username = "";
+		this.player = player;
 
-		this.exchanger = exchanger;
-		isServer = exchanger.isServer();
+		boardAI = new Board();
+		ai = new AI(boardAI);
+		isMyTurnAI = false;
 	}
 
 
@@ -54,33 +63,19 @@ public class GameController implements Runnable {
 	 * @return 勝敗が決まってる場合，true
 	 */
 	public boolean judge() {
-		if (isWin()) {
-			//System.out.println(username + ">> あなたの勝ちです．");
-			panel.addMsg(">> ゲームは終了しました．");
-			panel.addMsg(">> あなたの勝ちです．");
+		if (board.isWin()) {
 			isPlaying = false;
+			System.out.println("You Win!");
 			return true;
-		} else if (isLoss()) {
-			//System.out.println(username + ">> あなたの負けです．");
-			panel.addMsg(">> ゲームは終了しました．");
-			panel.addMsg(">> あなたの負けです．");
+		} else if (board.isLoss()) {
 			isPlaying = false;
+			System.out.println("You Loss...");
 			return true;
 		}
 		return false;
 	}
 
 
-	public boolean isLoss() {
-		return board.isLoss();
-	}
-
-
-	/**
-	 * 自分の番であるかを判定する．自分の番である時，trueを返す．
-	 *
-	 * @return 自分の番である時，true
-	 */
 	public boolean isMyTurn() {
 		return isMyTurn;
 	}
@@ -91,187 +86,66 @@ public class GameController implements Runnable {
 	}
 
 
-	public boolean isWin() {
-		return board.isWin();
-	}
-
-
 	public boolean move(int x, int y, Direction dir) {
-		System.out.println(x + ", " + y + ", " + dir);
+		//System.out.println(x + ", " + y + ", " + dir);
 
 		if (!isPlaying()) {
-			//System.out.print(username + ">> ゲームは終了しました．");
-			panel.addMsg(">> ゲームは終了しました．");
-			if (isWin()) {
-				//System.out.println(">> あなたの勝ちです．");
-				panel.addMsg(">> あなたの勝ちです．");
-			} else {
-				//System.out.println(">> あなたの負けです．");
-				panel.addMsg(">> あなたの負けです．");
-			}
 			return false;
 		}
 
 		if (!isMyTurn) {
-			//System.out.println(username + ">> 相手の手番です．");
-			panel.addMsg(">> 相手の手番です．");
+			System.out.println(username + ">> 相手の手番です．");
+			//panel.addMsg(">> 相手の手番です．");
 			return false;
 		}
 
 		if (!board.isFriend(x, y)) {
-			//System.out.println(username + ">> 味方のゴーストを動かしてください．");
-			panel.addMsg(">> 味方のゴーストを動かしてください．");
+			System.out.println(username + ">> 味方のゴーストを動かしてください．");
+			//panel.addMsg(">> 味方のゴーストを動かしてください．");
 			return false;
 		}
 
 		Ghost ghost = board.getGhost(x, y);
 		if (!board.move(ghost, dir)) {
-			//System.out.println(username + ">> そこへは動かせません．");
-			panel.addMsg(">> そこへは動かせません．");
+			System.out.println(username + ">> そこへは動かせません．");
+			//panel.addMsg(">> そこへは動かせません．");
 			return false;
 		}
 
-		/*
-		 * 送信プロトコルを開始する．
-		 */
-		sendProtocol(board.getId(ghost), dir);
+		setMyTurn(false);
 
-		/*
-		 * 受信プロトコルを開始する．
-		 */
-		new Thread(this).start();
+		//AIの盤面に反映させる
+		int actorId = ghost.getId();
+		int id = 7 - actorId;
+		boardAI.move(false, id, dir.reverse());
+
+		//AIの盤面の死亡リストを取る
+		int db = boardAI.cntDeadFriendBlue();
+		int dr = boardAI.cntDeadFriendRed();
+		System.out.println("AI側死亡リスト：青" + db + ", 赤" + dr);
+
+		//ゲームが終わっていなければAIの手
+		judge();
+
+		repaint();
+
+		if (isPlaying) {
+			//AI
+			isMyTurnAI = true;
+			new Thread(this).start();
+		}
 
 		return true;
 	}
 
 
-	/**
-	 * 受信プロトコルを開始する．
-	 *
-	 * パケットA（着手情報）を受け取り，パケットB（消滅しているゴースト情報）で応答する．
-	 */
-	public void recieveProtocol() {
-		try {
-			/*
-			 * パケットA（着手情報）を受信する．
-			 */
-			String line = exchanger.getReader().readLine();
-			String[] str = line.split(" ");
-
-			int id = ghostSize - 1 - Integer.valueOf(str[0]);
-			Direction dir = Direction.valueOf(str[1]).reverse();
-
-			board.move(false, id, dir);
-
-			/*
-			 * パケットB（消滅しているゴースト情報）で応答する．
-			 */
-			String output = board.cntDeadFriendBlue() + " " + board.cntDeadFriendRed();
-			exchanger.getWriter().println(output);
-
-			if (judge()) {
-				//System.out.println(username + ">> ゲームは終了しました．");
-			} else {
-				//System.out.println(username + ">> 次はあなたの番です．");
-				panel.addMsg(">> 次はあなたの番です．");
-				setMyTurn(true);
-			}
-
-			repaint();
-
-			return;
-		} catch (IOException e) {
-			//System.out.println("接続が切れました．");
-			e.printStackTrace();
-		}
-	}
-
-
-	@Override
-	public void run() {
-		if (isPlaying) {
-			if (isMyTurn) {
-				// ユーザの入力を待つ...
-			} else {
-				// 受信プロトコルを開始する...
-				recieveProtocol();
-			}
-		} else {
-			// ゲームが終了している...
-		}
-	}
-
-
 	public void repaint() {
-		panel.repaint();
-	}
-
-
-	/**
-	 * 送信プロトコルを開始する．
-	 *
-	 * パケットA（着手情報）を送信し，パケットB（消滅しているゴースト情報）の応答を待つ．
-	 *
-	 * @param actorId
-	 * @param actorDir
-	 */
-	public void sendProtocol(int actorId, Direction actorDir) {
-		try {
-			/*
-			 * パケットA（着手情報）を送信する．
-			 */
-			String output = actorId + " " + actorDir.name();
-			exchanger.getWriter().println(output);
-
-			/*
-			 * パケットB（消滅しているゴースト情報）の応答を待つ．
-			 */
-			String line = exchanger.getReader().readLine();
-			String[] str = line.split(" ");
-
-			int deadSenderBlue = Integer.valueOf(str[0]);
-			int deadSenderRed = Integer.valueOf(str[1]);
-
-			if (board.getDeadEnemyBlue() != deadSenderBlue) {
-				//System.out.println(username + ">> 青のゴーストを倒しました．");
-				panel.addMsg(">> 青のゴーストを倒しました．");
-				panel.setGhostCnt(true, deadSenderBlue);
-			}
-			if (board.getDeadEnemyRed() != deadSenderRed) {
-				//System.out.println(username + ">> 赤のゴーストを倒しました．");
-				panel.addMsg(">> 赤のゴーストを倒しました．");
-				panel.setGhostCnt(false, deadSenderRed);
-			}
-			//System.out.println(
-			//username + ">> 現在の敵の消滅したゴーストは，青" + deadSenderBlue + "体, 赤" + deadSenderRed + "体です．");
-
-			board.setDeadEnemyBlue(deadSenderBlue);
-			board.setDeadEnemyRed(deadSenderRed);
-
-			if (judge()) {
-				//System.out.println(username + ">> ゲームは終了しました．");
-			}
-
-			setMyTurn(false);
-
-			repaint();
-
-			return;
-		} catch (IOException e) {
-			//System.out.println("接続が切れました．");
-			e.printStackTrace();
-		}
+		player.repaint();
 	}
 
 
 	public void setMyTurn(boolean isMyTurn) {
-		panel.wait(!isMyTurn);
 		this.isMyTurn = isMyTurn;
-	}
-
-
-	public void setPanel(GamePanel gamePanel) {
-		this.panel = gamePanel;
 	}
 
 
@@ -283,9 +157,74 @@ public class GameController implements Runnable {
 	public void start(boolean isInitiative) {
 		if (isInitiative) {
 			setMyTurn(true);
+			isMyTurnAI = false;
 		} else {
 			setMyTurn(false);
+			isMyTurnAI = true;
+			/*
+			 * 相手の番
+			 */
 			new Thread(this).start();
 		}
+	}
+
+
+	private boolean nextAiHand() {
+		if (!isPlaying()) {
+			return false;
+		}
+
+		if (!isMyTurnAI) {
+			System.out.println("AI>> 相手の手番です．");
+			return false;
+		}
+
+		Hand next = ai.nextHand();
+
+		System.out.println(next);
+
+		if (!boardAI.isFriend(next.getX(), next.getY())) {
+			System.out.println("AI>> AIのゴーストを動かしてください．");
+			//panel.addMsg(">> 味方のゴーストを動かしてください．");
+			return false;
+		}
+
+		Ghost ghost = boardAI.getGhost(next.getX(), next.getY());
+		Direction dir = next.getDirection();
+		if (!boardAI.move(ghost, dir)) {
+			System.out.println("AI>> そこへは動かせません．");
+			//panel.addMsg(">> そこへは動かせません．");
+			return false;
+		}
+
+		isMyTurnAI = false;
+
+		//人の盤面に反映させる
+		int actorId = ghost.getId();
+		int id = 7 - actorId;
+		board.move(false, id, dir.reverse());
+
+		//ひとの盤面の死亡リストを取る
+		//今は必要ない
+		int db = board.cntDeadFriendBlue();
+		int dr = board.cntDeadFriendRed();
+		System.out.println("ひと側死亡リスト：青" + db + ", 赤" + dr);
+
+		repaint();
+
+		//ゲームが終わっていなければひとの手
+		judge();
+		if (isPlaying) {
+			//ひと
+			setMyTurn(true);
+		}
+
+		return true;
+	}
+
+
+	@Override
+	public void run() {
+		nextAiHand();
 	}
 }

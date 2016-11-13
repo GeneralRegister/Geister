@@ -1,3 +1,11 @@
+/**
+ * Geister v3.0
+ *
+ * Copyright (c) 2016 tatsumi
+ *
+ * This software is released under the MIT License.
+ * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
+ */
 package model;
 
 
@@ -7,10 +15,6 @@ import java.util.Collections;
 import java.util.List;
 
 
-/**
- * @since Geister 1.0
- * @author tatsumi
- */
 public class Board {
 	private Ghost[] enemyGhosts;
 	private Ghost[] friendGhosts;
@@ -229,7 +233,7 @@ public class Board {
 	 *
 	 * @return 盤面の高さ
 	 */
-	private int getHeight() {
+	public int getHeight() {
 		return height;
 	}
 
@@ -259,7 +263,7 @@ public class Board {
 	 *
 	 * @return 盤面の幅
 	 */
-	private int getWidth() {
+	public int getWidth() {
 		return width;
 	}
 

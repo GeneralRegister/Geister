@@ -1,4 +1,13 @@
+/**
+ * Geister v3.0
+ *
+ * Copyright (c) 2016 tatsumi
+ *
+ * This software is released under the MIT License.
+ * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
+ */
 package view;
+
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -7,95 +16,91 @@ import java.awt.Point;
 
 import javax.swing.JPanel;
 
-import controller.GameController;
-import display.Display;
 import model.Board;
-import model.Direction;
 
 
-/**
- * @since Geister 1.0.0
- * @author tatsumi
- */
 public class GamePanel extends JPanel {
 	/*
-	 * 1. テクスチャのファイル場所を指定して下さい。
+	 * 1. テクスチャの画像ファイル
 	 *
 	 * 例：ghost.png
 	 *
-	 * （ファイルはviewパッケージ直下に置いてください）
+	 * （※ファイルはviewパッケージ直下に置く）
 	 */
-	String file_ghost = "ghost.png";
-	String file_ghostBlue = "ghostBlue.png";
-	String file_ghostRed = "ghostRed.png";
-	String file_cell = "cell.png";
-	String file_exitRight = "exit.png";
-	String file_exitLeft = "exit.png";
+	String fileGhost = "ghost.png";
+	String fileGhostBlue = "ghostBlue.png";
+	String fileGhostRed = "ghostRed.png";
+	String fileCell = "cell.png";
+	String fileExitRight = "exit.png";
+	String fileExitLeft = "exit.png";
 
 	/*
-	 * 2. グリッドの色を指定して下さい。
+	 * 2. テクスチャ
 	 */
-	private final static Color COLOR_GRID = new Color(50, 50, 50);
+	private Texture ghost;
+	private Texture ghostBlue;
+	private Texture ghostRed;
+	private Texture cell;
+	private Texture exitRight;
+	private Texture exitLeft;
 
 	/*
-	 * 3. ステージテクスチャが無い場合，デフォルトの背景色を指定して下さい。
+	 * 3. サイズ
 	 */
-	private final static Color COLOR_DEFAULT = new Color(0, 0, 0);
+	private int height;
+	private int width;
+	private int cellSize;
+	private int border;
+	private int outerCellSize;
 
 	/*
-	 * 以下，変更する必要はありません。
+	 * 4. 色
 	 */
-	private Texture ghost = new Texture(file_ghost, CELL, CELL);
-	private Texture ghostBlue = new Texture(file_ghostBlue, CELL, CELL);
-	private Texture ghostRed = new Texture(file_ghostRed, CELL, CELL);
-	private Texture cell = new Texture(file_cell, CELL, CELL);
-	private Texture exitRight = new Texture(file_exitRight, CELL, CELL);
-	private Texture exitLeft = new Texture(file_exitLeft, CELL, CELL);
+	private final static Color colorGrid = new Color(50, 50, 50);
+	private final static Color colorDefault = new Color(0, 0, 0);
+	public final static Color colorGoal = new Color(130, 130, 130);
+	public final static Color colorSelect = new Color(0, 155, 119);
 
-	private final static int HEIGHT = 6;
-	private final static int WIDTH = 6 + 2;
-	private final static int CELL = 100;
-	private final static int BORDER = 2;
-	private final static int OUTER_CELL = CELL + BORDER * 2;
-
-	public final static Color COLOR_GOAL = new Color(130, 130, 130); //盤面外の色
-	public final static Color COLOR_SELECT = new Color(0, 155, 119);
-
-	private GameController game;
-	private Point Select = new Point(-1, -1);
-
-	private Display display;
+	/*
+	 * 5. 盤
+	 */
+	private Board board;
+	private Point select;
 
 
-	public GamePanel(GameController game) {
-		setPreferredSize(new Dimension(WIDTH * OUTER_CELL, HEIGHT * OUTER_CELL));
-		setFocusable(true);
-
-		this.game = game;
-		game.setPanel(this);
-
-		repaint();
+	public GamePanel() {
+		setPreferredSize(new Dimension(600, 600));
 	}
 
 
-	public void wait(boolean isWaiting) {
-		display.wait(isWaiting);
+	public void init(Board board, int cellSize, int border) {
+		this.board = board;
+		this.cellSize = cellSize;
+		this.border = border;
+
+		height = board.getHeight();
+		width = board.getWidth() + 2;
+		outerCellSize = cellSize + border * 2;
+
+		setSelect(new Point(-1, -1));
+		setPreferredSize(new Dimension(width * outerCellSize, height * outerCellSize));
+
+		ghost = new Texture(fileGhost, cellSize, cellSize);
+		ghostBlue = new Texture(fileGhostBlue, cellSize, cellSize);
+		ghostRed = new Texture(fileGhostRed, cellSize, cellSize);
+		cell = new Texture(fileCell, cellSize, cellSize);
+		exitRight = new Texture(fileExitRight, cellSize, cellSize);
+		exitLeft = new Texture(fileExitLeft, cellSize, cellSize);
 	}
 
 
-	public void addMsg(String msg) {
-		display.addMsg(msg);
+	public Point getSelect() {
+		return select;
 	}
 
 
-	public void setGhostCnt(boolean isBlue, int num) {
-		display.setGhostCnt(isBlue, num);
-	}
-
-
-	public void start(boolean isInitiative) {
-		repaint();
-		game.start(isInitiative);
+	public void setSelect(Point select) {
+		this.select = select;
 	}
 
 
@@ -110,22 +115,15 @@ public class GamePanel extends JPanel {
 	}
 
 
-	/**
-	 * 表示用です．
-	 *
-	 * @param g
-	 */
 	public void draw(Graphics g) {
-		Board board = game.getBoard();
+		g.setColor(colorGrid);
+		g.fillRect(0, 0, width * outerCellSize, height * outerCellSize);
 
-		g.setColor(COLOR_GRID);
-		g.fillRect(0, 0, WIDTH * OUTER_CELL, HEIGHT * OUTER_CELL);
-
-		for (int y = 0; y < HEIGHT; y++)
-			for (int x = 0; x < WIDTH; x++) {
-				if (Select.x == x && Select.y == y) {
-					g.setColor(COLOR_SELECT);
-					g.fillRect(x * OUTER_CELL, y * OUTER_CELL, OUTER_CELL, OUTER_CELL);
+		for (int y = 0; y < height; y++)
+			for (int x = 0; x < width; x++) {
+				if (getSelect().x == x && getSelect().y == y) {
+					g.setColor(colorSelect);
+					g.fillRect(x * outerCellSize, y * outerCellSize, outerCellSize, outerCellSize);
 				}
 
 				if (board.isOnScreen(x - 1, y)) {
@@ -133,105 +131,47 @@ public class GamePanel extends JPanel {
 						/*
 						 * 出口
 						 */
-						g.drawImage(cell.getImage(), x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, null);
-						//g.setColor(COLOR_BOARD);
-						//g.fillRect(x * CELL + WIDTH_BORDER, y * CELL + WIDTH_BORDER, INNER_CELL, INNER_CELL);
+						g.drawImage(exitRight.getImage(), x * outerCellSize + border, y * outerCellSize + border, null);
 					} else {
 						/*
 						 * 盤面
 						 */
-						g.drawImage(exitRight.getImage(), x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, null);
+						g.drawImage(cell.getImage(), x * outerCellSize + border, y * outerCellSize + border, null);
 					}
 
 					if (board.isEnemy(x - 1, y)) {
 						/*
 						 * 敵のゴースト
 						 */
-						g.drawImage(ghost.getImage(), x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, null);
-						//g.setColor(Color.WHITE);
-						//g.fillRect(x * CELL + WIDTH_BORDER, y * CELL + WIDTH_BORDER, INNER_CELL, INNER_CELL);
+						g.drawImage(ghost.getImage(), x * outerCellSize + border, y * outerCellSize + border, null);
 					} else if (board.isFriend(x - 1, y)) {
 						if (board.getGhost(x - 1, y).isBlue()) {
 							/*
 							 * 味方のゴースト（青）
 							 */
-							g.drawImage(ghostBlue.getImage(), x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, null);
-							//g.setColor(Color.BLUE);
-							//g.fillRect(x * CELL + WIDTH_BORDER, y * CELL + WIDTH_BORDER, INNER_CELL, INNER_CELL);
+							g.drawImage(ghostBlue.getImage(), x * outerCellSize + border, y * outerCellSize + border,
+									null);
 						} else {
 							/*
 							 * 味方のゴースト（赤）
 							 */
-							g.drawImage(ghostRed.getImage(), x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, null);
-							//g.setColor(Color.RED);
-							//g.fillRect(x * CELL + WIDTH_BORDER, y * CELL + WIDTH_BORDER, INNER_CELL, INNER_CELL);
+							g.drawImage(ghostRed.getImage(), x * outerCellSize + border, y * outerCellSize + border,
+									null);
 						}
 					}
 				} else if (board.isGoal(x - 1, y)) {
 					/*
-					 * 盤面外のゴール（出口の隣）
+					 * 出口の隣（ゴール）
 					 */
-					g.setColor(COLOR_GOAL);
-					g.fillRect(x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, BORDER, BORDER);
+					g.setColor(colorGoal);
+					g.fillRect(x * outerCellSize + border, y * outerCellSize + border, border, border);
 				} else {
 					/*
-					 * ただの盤面外
+					 * 盤面の外
 					 */
-					g.setColor(COLOR_DEFAULT);
-					g.fillRect(x * OUTER_CELL + BORDER, y * OUTER_CELL + BORDER, BORDER, BORDER);
+					g.setColor(colorDefault);
+					g.fillRect(x * outerCellSize, y * outerCellSize, outerCellSize, outerCellSize);
 				}
 			}
-	}
-
-
-	private void selectSelect(Point p) {
-		if (p != null) {
-			p.setLocation(p.x / OUTER_CELL, p.y / OUTER_CELL);
-			if (Select.equals(p))
-				Select.setLocation(-1, -1);
-			else
-				Select.setLocation(p);
-		}
-	}
-
-
-	public void selectAction(Direction dir) {
-		int x = Select.x;
-		int y = Select.y;
-		Select.setLocation(-1, -1);
-		game.move(x - 1, y, dir);
-	}
-
-
-	public void mouseClicked(javafx.scene.input.MouseEvent event) {
-		Point mp = new Point((int) event.getX(), (int) event.getY());
-		Point p = new Point(mp.x / OUTER_CELL, mp.y / OUTER_CELL);
-
-		/*
-		 * 味方のゴーストを選択・解除する
-		 */
-		if (game.getBoard().isFriend(p.x - 1, p.y)) {
-			selectSelect(mp);
-			repaint();
-		}
-
-		/*
-		 * 味方のゴーストが選択されている場合，その四近傍を選択すると，移動メソッドを呼ぶ．
-		 */
-		if (!Select.equals(new Point(-1, -1))) {
-			if (p.equals(new Point(Select.x, Select.y - 1)))
-				selectAction(Direction.up);
-			if (p.equals(new Point(Select.x + 1, Select.y)))
-				selectAction(Direction.right);
-			if (p.equals(new Point(Select.x, Select.y + 1)))
-				selectAction(Direction.down);
-			if (p.equals(new Point(Select.x - 1, Select.y)))
-				selectAction(Direction.left);
-		}
-	}
-
-
-	public void setDisplay(Display display) {
-		this.display = display;
 	}
 }
