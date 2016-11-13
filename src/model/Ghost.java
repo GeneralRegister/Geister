@@ -1,19 +1,14 @@
+/**
+ * Geister v3.0
+ *
+ * Copyright (c) 2016 tatsumi
+ *
+ * This software is released under the MIT License.
+ * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
+ */
 package model;
 
 
-/**
- * Ghostクラスは「Geister」のゴーストを表す．
- *
- * このゴーストは，以下の要素を持つ．
- * <ul>
- * <li>存在の有無
- * <li>盤面上の位置
- * <li>色
- * </ul>
- *
- * @since Geister 1.0.0
- * @author tatsumi
- */
 public class Ghost {
 	private boolean isFriend;
 	/**

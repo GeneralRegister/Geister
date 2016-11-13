@@ -1,10 +1,14 @@
+/**
+ * Geister v3.0
+ *
+ * Copyright (c) 2016 tatsumi
+ *
+ * This software is released under the MIT License.
+ * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
+ */
 package model;
 
 
-/**
- * @since Geister 1.0.0
- * @author tatsumi
- */
 public enum Direction {
 	up(0, -1),
 	right(1, 0),
