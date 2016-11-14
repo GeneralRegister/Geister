@@ -8,7 +8,6 @@
  */
 package controller;
 
-
 import ai.AI;
 import ai.Hand;
 import model.Board;
@@ -65,11 +64,13 @@ public class GameController implements Runnable {
 	public boolean judge() {
 		if (board.isWin()) {
 			isPlaying = false;
-			System.out.println("You Win!");
+			//System.out.println("You Win!");
+			player.addMsg("You WIN!");
 			return true;
 		} else if (board.isLoss()) {
 			isPlaying = false;
-			System.out.println("You Loss...");
+			//System.out.println("You Loss...");
+			player.addMsg("You LOSS...");
 			return true;
 		}
 		return false;
@@ -94,21 +95,21 @@ public class GameController implements Runnable {
 		}
 
 		if (!isMyTurn) {
-			System.out.println(username + ">> 相手の手番です．");
-			//panel.addMsg(">> 相手の手番です．");
+			//System.out.println(username + ">> 相手の手番です．");
+			player.addMsg(">> 相手の手番です．");
 			return false;
 		}
 
 		if (!board.isFriend(x, y)) {
-			System.out.println(username + ">> 味方のゴーストを動かしてください．");
-			//panel.addMsg(">> 味方のゴーストを動かしてください．");
+			//System.out.println(username + ">> 味方のゴーストを動かしてください．");
+			player.addMsg(">> 味方のゴーストを動かしてください．");
 			return false;
 		}
 
 		Ghost ghost = board.getGhost(x, y);
 		if (!board.move(ghost, dir)) {
-			System.out.println(username + ">> そこへは動かせません．");
-			//panel.addMsg(">> そこへは動かせません．");
+			//System.out.println(username + ">> そこへは動かせません．");
+			player.addMsg(">> そこへは動かせません．");
 			return false;
 		}
 
@@ -122,7 +123,14 @@ public class GameController implements Runnable {
 		//AIの盤面の死亡リストを取る
 		int db = boardAI.cntDeadFriendBlue();
 		int dr = boardAI.cntDeadFriendRed();
-		System.out.println("AI側死亡リスト：青" + db + ", 赤" + dr);
+
+		//AIの盤面の死亡リストを自分の盤に反映させる
+		board.setDeadEnemyBlue(db);
+		board.setDeadEnemyRed(dr);
+
+		//System.out.println("AI側死亡リスト：青" + db + ", 赤" + dr);
+		player.setGhostCnt(true, db);
+		player.setGhostCnt(false, dr);
 
 		//ゲームが終わっていなければAIの手
 		judge();
@@ -146,6 +154,7 @@ public class GameController implements Runnable {
 
 	public void setMyTurn(boolean isMyTurn) {
 		this.isMyTurn = isMyTurn;
+		player.wait(!isMyTurn);
 	}
 
 
@@ -175,16 +184,14 @@ public class GameController implements Runnable {
 		}
 
 		if (!isMyTurnAI) {
-			System.out.println("AI>> 相手の手番です．");
+			//System.out.println("AI>> 相手の手番です．");
 			return false;
 		}
 
 		Hand next = ai.nextHand();
 
-		System.out.println(next);
-
 		if (!boardAI.isFriend(next.getX(), next.getY())) {
-			System.out.println("AI>> AIのゴーストを動かしてください．");
+			//System.out.println("AI>> AIのゴーストを動かしてください．");
 			//panel.addMsg(">> 味方のゴーストを動かしてください．");
 			return false;
 		}
@@ -192,7 +199,7 @@ public class GameController implements Runnable {
 		Ghost ghost = boardAI.getGhost(next.getX(), next.getY());
 		Direction dir = next.getDirection();
 		if (!boardAI.move(ghost, dir)) {
-			System.out.println("AI>> そこへは動かせません．");
+			//System.out.println("AI>> そこへは動かせません．");
 			//panel.addMsg(">> そこへは動かせません．");
 			return false;
 		}
@@ -208,12 +215,18 @@ public class GameController implements Runnable {
 		//今は必要ない
 		int db = board.cntDeadFriendBlue();
 		int dr = board.cntDeadFriendRed();
-		System.out.println("ひと側死亡リスト：青" + db + ", 赤" + dr);
+
+		//AIの盤面の死亡リストを自分の盤に反映させる
+		boardAI.setDeadEnemyBlue(db);
+		boardAI.setDeadEnemyRed(dr);
+
+		//System.out.println("ひと側死亡リスト：青" + db + ", 赤" + dr);
 
 		repaint();
 
 		//ゲームが終わっていなければひとの手
 		judge();
+
 		if (isPlaying) {
 			//ひと
 			setMyTurn(true);

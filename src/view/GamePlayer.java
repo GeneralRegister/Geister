@@ -10,28 +10,55 @@ package view;
 
 
 import java.awt.Point;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.Random;
 
+import application.Display;
 import controller.GameController;
+import javafx.scene.input.MouseEvent;
 import model.Direction;
 
 
-public class GamePlayer extends GamePanel implements MouseListener {
+public class GamePlayer extends GamePanel {
 	private GameController game;
 
-	private int cellSize = 100;
+	private int cellSize = 96;
 	private int border = 2;
 	private int outerCellSize = cellSize + border * 2;
+
+	private Display display;
 
 
 	public GamePlayer() {
 		super();
 		game = new GameController(this);
 		super.init(game.getBoard(), cellSize, border);
-		addMouseListener(this);
+	}
 
+
+	public void setDisplay(Display display) {
+		this.display = display;
+	}
+
+
+	/*
+	 * いかディスプレイ関係
+	 */
+	public void wait(boolean isWaiting) {
+		display.wait(isWaiting);
+	}
+
+
+	public void addMsg(String msg) {
+		display.addMsg(msg);
+	}
+
+
+	public void setGhostCnt(boolean isBlue, int num) {
+		display.setGhostCnt(isBlue, num);
+	}
+
+
+	public void start() {
 		game.start(new Random().nextBoolean());
 	}
 
@@ -81,46 +108,7 @@ public class GamePlayer extends GamePanel implements MouseListener {
 	}
 
 
-	/*
-	 * (非 Javadoc)
-	 * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
-	 */
-	public void mouseClicked(javafx.scene.input.MouseEvent event) {
-		Point mp = new Point((int) event.getX(), (int) event.getY());
-		select(new Point(mp.x / outerCellSize, mp.y / outerCellSize));
-	}
-
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		// 遅い
-	}
-
-
-	@Override
-	public void mousePressed(MouseEvent e) {
-		Point mp = new Point((int) e.getX(), (int) e.getY());
-		select(new Point(mp.x / outerCellSize, mp.y / outerCellSize));
-	}
-
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
-
-	}
-
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
-
-	}
-
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
-
+	public void mousePressed(MouseEvent event) {
+		select(new Point((int) event.getX() / outerCellSize, (int) event.getY() / outerCellSize));
 	}
 }

@@ -56,9 +56,9 @@ public class GamePanel extends JPanel {
 	/*
 	 * 4. 色
 	 */
-	private final static Color colorGrid = new Color(50, 50, 50);
+	private final static Color colorGrid = new Color(70, 60, 80);
 	private final static Color colorDefault = new Color(0, 0, 0);
-	public final static Color colorGoal = new Color(130, 130, 130);
+	public final static Color colorGoal = new Color(0, 0, 0);
 	public final static Color colorSelect = new Color(0, 155, 119);
 
 	/*
@@ -128,47 +128,35 @@ public class GamePanel extends JPanel {
 
 				if (board.isOnScreen(x - 1, y)) {
 					if (board.isExit(x - 1, y)) {
-						/*
-						 * 出口
-						 */
+						// 出口
 						g.drawImage(exitRight.getImage(), x * outerCellSize + border, y * outerCellSize + border, null);
 					} else {
-						/*
-						 * 盤面
-						 */
+						// 盤面
 						g.drawImage(cell.getImage(), x * outerCellSize + border, y * outerCellSize + border, null);
 					}
 
 					if (board.isEnemy(x - 1, y)) {
-						/*
-						 * 敵のゴースト
-						 */
+						// 敵のゴースト
 						g.drawImage(ghost.getImage(), x * outerCellSize + border, y * outerCellSize + border, null);
 					} else if (board.isFriend(x - 1, y)) {
 						if (board.getGhost(x - 1, y).isBlue()) {
-							/*
-							 * 味方のゴースト（青）
-							 */
+							// 味方のゴースト（青）
 							g.drawImage(ghostBlue.getImage(), x * outerCellSize + border, y * outerCellSize + border,
 									null);
 						} else {
-							/*
-							 * 味方のゴースト（赤）
-							 */
+							// 味方のゴースト（赤）
 							g.drawImage(ghostRed.getImage(), x * outerCellSize + border, y * outerCellSize + border,
 									null);
 						}
 					}
 				} else if (board.isGoal(x - 1, y)) {
-					/*
-					 * 出口の隣（ゴール）
-					 */
-					g.setColor(colorGoal);
-					g.fillRect(x * outerCellSize + border, y * outerCellSize + border, border, border);
+					// 出口の隣（ゴール）
+					//g.setColor(colorGoal);
+					//g.fillRect(x * outerCellSize + border, y * outerCellSize + border, cellSize, cellSize);
+					g.setColor(colorDefault);
+					g.fillRect(x * outerCellSize, y * outerCellSize, outerCellSize, outerCellSize);
 				} else {
-					/*
-					 * 盤面の外
-					 */
+					// 盤面の外
 					g.setColor(colorDefault);
 					g.fillRect(x * outerCellSize, y * outerCellSize, outerCellSize, outerCellSize);
 				}
