@@ -134,8 +134,8 @@ public class Ghost {
 
 	public String toString() {
 		if (isFriend)
-			return "ghost: friend, (" + x + ", " + y + ")";
+			return "ghost" + getId() + ": friend, (" + x + ", " + y + ")";
 		else
-			return "ghost: enemy, (" + x + ", " + y + ")";
+			return "ghost" + getId() + ": enemy, (" + x + ", " + y + ")";
 	}
 }

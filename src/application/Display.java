@@ -34,6 +34,7 @@ public class Display {
 	private Texture ghostBlue = new Texture(fileGhostBlue, ghostIconSize, ghostIconSize);
 	private Texture ghostRed = new Texture(fileGhostRed, ghostIconSize, ghostIconSize);
 
+	private GamePlayer game;
 
 	public Display(Stage primaryStage, double x, double y) throws Exception {
 		VBox display = new VBox();
@@ -53,6 +54,8 @@ public class Display {
 		stage.setTitle("Geister v3.0");
 		stage.setResizable(false);
 		stage.show();
+		
+		game.start();
 	}
 
 
@@ -113,7 +116,7 @@ public class Display {
 		panel.setDisplay(this);
 
 		//TODO ここでゲーム開始
-		panel.start();
+		game = panel;
 
 		SwingNode swingNode = new SwingNode();
 		swingNode.setContent(panel);

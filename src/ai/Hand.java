@@ -20,7 +20,7 @@ public class Hand {
 
 
 	public Hand(Point p, Direction dir) {
-		this.p = p;
+		this.p = new Point(p);
 		this.dir = dir;
 	}
 
@@ -42,5 +42,22 @@ public class Hand {
 
 	public Direction getDirection() {
 		return dir;
+	}
+
+
+	/**
+	 * 着手を反転させる．自分から見た着手を，相手から見た着手に反転させる．
+	 *
+	 * （※Geister の盤面は 6 * 6 です．）
+	 *
+	 * @return
+	 */
+	public Hand reverse() {
+		return new Hand(new Point(5 - p.x, 5 - p.y), dir.reverse());
+	}
+
+
+	public String toString() {
+		return "[" + p.x + ", " + p.y + "], " + dir;
 	}
 }

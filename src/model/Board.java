@@ -8,11 +8,12 @@
  */
 package model;
 
-
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import ai.Hand;
 
 
 public class Board {
@@ -35,7 +36,7 @@ public class Board {
 
 
 	public Board() {
-		initRandom();
+		initGhosts();
 		board = new Ghost[height][width];
 
 		for (Ghost ghost : enemyGhosts)
@@ -50,10 +51,7 @@ public class Board {
 	}
 
 
-	private void initRandom() {
-		/*
-		 * TODO テスト用...
-		 */
+	private void initGhosts() {
 		enemyGhosts = new Ghost[8];
 		friendGhosts = new Ghost[8];
 		int num = 0;
@@ -67,9 +65,10 @@ public class Board {
 			soul.add(Soul.blue);
 		for (int i = 0; i < 4; i++)
 			soul.add(Soul.red);
+
 		Collections.shuffle(soul);
 
-		for (int y = 4; y < 6; y++)
+		for (int y = 4; y <= 5; y++)
 			for (int x = 1; x <= 4; x++)
 				friendGhosts[num] = new Ghost(true, num, x, y, soul.get(num++));
 	}
@@ -96,27 +95,102 @@ public class Board {
 	 * @param isFriend 敵・味方
 	 * @param id ゴースト番号
 	 * @param dir 方向
-	 * @return ゴーストが動ける場合，true
+	 * @return 占領出来た場合，true
 	 */
 	public boolean canMove(boolean isFriend, int id, Direction dir) {
-		Ghost ghost = getGhost(isFriend, id);
-		if (ghost == null)
-			return false;
-		return canOccupy(isFriend, ghost.getX() + dir.x(), ghost.getY() + dir.y());
+		return canMove(getGhost(isFriend, id), dir);
 	}
 
 
 	/**
-	 * ゴーストが盤面を占領できるかを判定する．占領できる場合，trueを返す．
+	 * ゴーストが指定の方向に動けるかどうかを判定する．動ける場合，trueを返す．
 	 *
 	 * @param isFriend 敵・味方
+	 * @param id ゴースト番号
+	 * @param dir 方向
+	 * @return 着手できた場合，true
+	 */
+	public boolean canMove(Hand hand) {
+		return canMove(getGhost(hand.getX(), hand.getY()), hand.getDirection());
+	}
+
+
+	/**
+	 * 指定のゴーストで指定の方向に移動できるかを判定する．条件によって出口へ移動できる．移動できる場合，trueを返す．
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param ghost ゴースト
+	 * @param dir 方向
+	 * @return 移動出来た場合，true
+	 */
+	public boolean canMove(Ghost ghost, Direction dir) {
+		if (ghost == null)
+			return false;
+
+		if (canOccupyCell(ghost, ghost.getX() + dir.x(), ghost.getY() + dir.y()))
+			return true;
+
+		if (canOccupyGoal(ghost, ghost.getX() + dir.x(), ghost.getY() + dir.y()))
+			return true;
+
+		return false;
+	}
+
+
+	/**
+	 * ゴーストで指定の盤面を占領できる場合，trueを返す．
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param ghost ゴースト
 	 * @param x x座標
 	 * @param y y座標
-	 * @return ゴーストが占領できる場合，true
+	 * @return 盤面を占領した場合，true
 	 */
-	public boolean canOccupy(boolean isFriend, int x, int y) {
-		if (isOnScreen(x, y))
-			return getGhost(x, y) == null || getGhost(x, y).isFriend() != isFriend;
+	public boolean canOccupyCell(Ghost ghost, int x, int y) {
+		if (!isOnScreen(x, y))
+			return false;
+
+		if (ghost == null)
+			return false;
+
+		if (getGhost(x, y) == null) {
+			return true;
+		} else {
+			if (getGhost(x, y).isFriend() != ghost.isFriend()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+	/**
+	 * ゴーストでゴールを占領できる場合，trueを返す．
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param ghost ゴースト
+	 * @param x x座標
+	 * @param y y座標
+	 * @return ゴールを占領した場合，true
+	 */
+	public boolean canOccupyGoal(Ghost ghost, int x, int y) {
+		if (ghost == null)
+			return false;
+
+		if (ghost.isFriend()) {
+			if (ghost.isBlue()) {
+				if (isFriendGoal(x, y)) {
+					return true;
+				}
+			}
+		} else {
+			return true;
+		}
+
 		return false;
 	}
 
@@ -432,6 +506,19 @@ public class Board {
 
 
 	/**
+	 * 指定の着手が有効である場合，着手する．着手できた場合，trueを返す．
+	 *
+	 * @param isFriend 敵・味方
+	 * @param id ゴースト番号
+	 * @param dir 方向
+	 * @return 着手できた場合，true
+	 */
+	public boolean move(Hand hand) {
+		return move(getGhost(hand.getX(), hand.getY()), hand.getDirection());
+	}
+
+
+	/**
 	 * 指定のゴーストで指定の方向に移動する．条件によって，出口へ移動できる．移動出来た場合，trueを返す．
 	 *
 	 * @param ghost ゴースト
@@ -439,6 +526,10 @@ public class Board {
 	 * @return 移動出来た場合，true
 	 */
 	public boolean move(Ghost ghost, Direction dir) {
+		System.out.println("move()::" + ghost + ", " + dir);
+		if (ghost == null)
+			return false;
+
 		if (occupyCell(ghost, ghost.getX() + dir.x(), ghost.getY() + dir.y()))
 			return true;
 

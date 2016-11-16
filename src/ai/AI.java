@@ -27,7 +27,7 @@ public class AI {
 
 	public Hand nextHand() {
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -37,6 +37,8 @@ public class AI {
 
 	public Hand simpleNextHand() {
 		ArrayList<Hand> hands = simpleNextHandList();
+		if (hands.size() == 0)
+			return null;
 		return hands.get(new Random().nextInt(hands.size()));
 	}
 
