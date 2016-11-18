@@ -6,12 +6,10 @@
  * This software is released under the MIT License.
  * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
  */
-package ai;
+package model;
 
 
 import java.awt.Point;
-
-import model.Direction;
 
 
 public class Hand {

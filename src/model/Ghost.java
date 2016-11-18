@@ -9,6 +9,9 @@
 package model;
 
 
+import java.awt.Point;
+
+
 public class Ghost {
 	private boolean isFriend;
 	/**
@@ -68,6 +71,11 @@ public class Ghost {
 		isAlive = false;
 		setX(-1);
 		setY(-1);
+	}
+
+
+	public Point getPosition() {
+		return new Point(getX(), getY());
 	}
 
 

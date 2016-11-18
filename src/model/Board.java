@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ai.Hand;
-
 
 public class Board {
 	private Ghost[] enemyGhosts;
@@ -23,14 +21,8 @@ public class Board {
 	private int height = 6;
 	private int width = 6;
 
-	/*
-	 * TODO ゴールにゴーストを配置するのではなく，ゴール仕方していないかだけをtrue, falseで判定する
-	 *
-	 * つまり，ゴールにいるかいないか
-	 */
-	private Ghost friendGoal;
-	private Ghost enemyGoal;
-
+	private boolean isGoalFriend;
+	private boolean isGoalEnemy;
 	private int deadEnemyBlue;
 	private int deadEnemyRed;
 
@@ -44,10 +36,10 @@ public class Board {
 		for (Ghost ghost : friendGhosts)
 			board[ghost.getY()][ghost.getX()] = ghost;
 
-		friendGoal = null;
-		enemyGoal = null;
-		deadEnemyBlue = 0;
-		deadEnemyRed = 0;
+		setIsGoalFriend(false);
+		setIsGoalEnemy(false);
+		setDeadEnemyBlue(0);
+		setDeadEnemyRed(0);
 	}
 
 
@@ -128,6 +120,9 @@ public class Board {
 		if (ghost == null)
 			return false;
 
+		if (ghost.isDead())
+			return false;
+
 		if (canOccupyCell(ghost, ghost.getX() + dir.x(), ghost.getY() + dir.y()))
 			return true;
 
@@ -148,7 +143,7 @@ public class Board {
 	 * @param y y座標
 	 * @return 盤面を占領した場合，true
 	 */
-	public boolean canOccupyCell(Ghost ghost, int x, int y) {
+	private boolean canOccupyCell(Ghost ghost, int x, int y) {
 		if (!isOnScreen(x, y))
 			return false;
 
@@ -177,7 +172,7 @@ public class Board {
 	 * @param y y座標
 	 * @return ゴールを占領した場合，true
 	 */
-	public boolean canOccupyGoal(Ghost ghost, int x, int y) {
+	private boolean canOccupyGoal(Ghost ghost, int x, int y) {
 		if (ghost == null)
 			return false;
 
@@ -201,11 +196,11 @@ public class Board {
 	 * @param isBlue ゴーストの色
 	 * @return 消滅した味方の指定の色のゴーストの数
 	 */
-	public int cntDeadFriend(boolean isBlue) {
+	public int getDeadFriend(boolean isBlue) {
 		if (isBlue)
-			return cntDeadFriendBlue();
+			return getDeadFriendBlue();
 		else
-			return cntDeadFriendRed();
+			return getDeadFriendRed();
 	}
 
 
@@ -214,7 +209,7 @@ public class Board {
 	 *
 	 * @return 消滅した味方の青いゴーストの数
 	 */
-	public int cntDeadFriendBlue() {
+	public int getDeadFriendBlue() {
 		int cnt = 0;
 		for (int i = 0; i < 8; i++)
 			if (friendGhosts[i].isDead() && friendGhosts[i].isBlue())
@@ -228,7 +223,7 @@ public class Board {
 	 *
 	 * @return 消滅した味方の赤いゴーストの数
 	 */
-	public int cntDeadFriendRed() {
+	public int getDeadFriendRed() {
 		int cnt = 0;
 		for (int i = 0; i < 8; i++)
 			if (friendGhosts[i].isDead() && friendGhosts[i].isRed())
@@ -299,6 +294,16 @@ public class Board {
 			return friendGhosts[id];
 		else
 			return enemyGhosts[id];
+	}
+
+
+	public boolean getIsGoalEnemy() {
+		return isGoalEnemy;
+	}
+
+
+	public boolean getIsGoalFriend() {
+		return isGoalFriend;
 	}
 
 
@@ -443,7 +448,7 @@ public class Board {
 	 */
 	public boolean isLoss() {
 		// 勝ち条件1...自分の「良いオバケ」が全部取られる
-		if (cntDeadFriendBlue() == 4)
+		if (getDeadFriendBlue() == 4)
 			return true;
 
 		// 勝ち条件2...相手の「悪いオバケ」を全部相手に取る
@@ -451,7 +456,7 @@ public class Board {
 			return true;
 
 		// 勝ち条件3...相手の「良いオバケ」のひとつが自分側脱出口から外に出る
-		if (enemyGoal != null)
+		if (getIsGoalEnemy())
 			return true;
 
 		return false;
@@ -481,11 +486,11 @@ public class Board {
 			return true;
 
 		// 勝ち条件2...自分の「悪いオバケ」が全部相手に取られる
-		if (cntDeadFriendRed() == 4)
+		if (getDeadFriendRed() == 4)
 			return true;
 
 		// 勝ち条件3...自分の「良いオバケ」のひとつを相手側脱出口から外に出す
-		if (friendGoal != null)
+		if (getIsGoalFriend())
 			return true;
 
 		return false;
@@ -526,8 +531,10 @@ public class Board {
 	 * @return 移動出来た場合，true
 	 */
 	public boolean move(Ghost ghost, Direction dir) {
-		System.out.println("move()::" + ghost + ", " + dir);
 		if (ghost == null)
+			return false;
+
+		if (ghost.isDead())
 			return false;
 
 		if (occupyCell(ghost, ghost.getX() + dir.x(), ghost.getY() + dir.y()))
@@ -548,7 +555,7 @@ public class Board {
 	 * @param y y座標
 	 * @return 盤面を占領した場合，true
 	 */
-	public boolean occupyCell(Ghost ghost, int x, int y) {
+	private boolean occupyCell(Ghost ghost, int x, int y) {
 		if (!isOnScreen(x, y))
 			return false;
 
@@ -582,27 +589,37 @@ public class Board {
 	 * @param y y座標
 	 * @return ゴールを占領した場合，true
 	 */
-	public boolean occupyGoal(Ghost ghost, int x, int y) {
+	private boolean occupyGoal(Ghost ghost, int x, int y) {
 		if (ghost == null)
 			return false;
 
 		if (ghost.isFriend()) {
 			if (ghost.isBlue()) {
 				if (isFriendGoal(x, y)) {
-					friendGoal = ghost;
+					setIsGoalFriend(true);
 					board[ghost.getY()][ghost.getX()] = null;
 					ghost.setPosition(-1, -1);
 					return true;
 				}
 			}
 		} else {
-			enemyGoal = ghost;
+			setIsGoalEnemy(true);
 			board[ghost.getY()][ghost.getX()] = null;
 			ghost.setPosition(-1, -1);
 			return true;
 		}
 
 		return false;
+	}
+
+
+	public void setIsGoalEnemy(boolean isGoal) {
+		isGoalEnemy = isGoal;
+	}
+
+
+	public void setIsGoalFriend(boolean isGoal) {
+		isGoalFriend = isGoal;
 	}
 
 

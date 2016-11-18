@@ -151,8 +151,6 @@ public class GamePanel extends JPanel {
 					}
 				} else if (board.isGoal(x - 1, y)) {
 					// 出口の隣（ゴール）
-					//g.setColor(colorGoal);
-					//g.fillRect(x * outerCellSize + border, y * outerCellSize + border, cellSize, cellSize);
 					g.setColor(colorDefault);
 					g.fillRect(x * outerCellSize, y * outerCellSize, outerCellSize, outerCellSize);
 				} else {

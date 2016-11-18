@@ -8,11 +8,13 @@
  */
 package view;
 
+
 import java.awt.Point;
 
+import ai.AI;
 import application.Display;
+import controller.AIPlayer;
 import controller.GameController;
-import controller.Player;
 import javafx.scene.input.MouseEvent;
 import model.Direction;
 
@@ -26,19 +28,21 @@ public class GamePlayer extends GamePanel implements Runnable {
 
 	private Display display;
 
+	private AI[] ai;
+
 
 	public GamePlayer() {
 		super();
 		game = new GameController();
 		game.setPanel(this);
-		game.initBoard();
-		Player player1 = new Player(game, 0);
-		Player player2 = new Player(game, 1);
-		game.setPlayer(player1, player2);
+
+		ai = new AI[2];
+		ai[0] = new AI(game.getBoard(0));
+		ai[1] = new AI(game.getBoard(1));
+		game.setPlayer(0, new AIPlayer(game, 0, ai[0]));
+		game.setPlayer(1, new AIPlayer(game, 1, ai[1]));
 
 		super.init(game.getBoard(0), cellSize, border);
-		
-		//game.start();
 	}
 
 
@@ -48,7 +52,7 @@ public class GamePlayer extends GamePanel implements Runnable {
 
 
 	/*
-	 * いかディスプレイ関係
+	 * ディスプレイ関係
 	 */
 	public void wait(boolean isWaiting) {
 		display.wait(isWaiting);
@@ -60,8 +64,8 @@ public class GamePlayer extends GamePanel implements Runnable {
 	}
 
 
-	public void setGhostCnt(boolean isBlue, int num) {
-		display.setGhostCnt(isBlue, num);
+	public void setGhostCnt(int index, boolean isBlue, int num) {
+		display.setGhostCnt(index, isBlue, num);
 	}
 
 
@@ -124,6 +128,6 @@ public class GamePlayer extends GamePanel implements Runnable {
 
 	@Override
 	public void run() {
-		game.autoAIs();
+		game.start();
 	}
 }

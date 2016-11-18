@@ -8,7 +8,6 @@
  */
 package application;
 
-
 import javafx.embed.swing.SwingNode;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -26,7 +25,7 @@ public class Display {
 
 	private int iconSpace = 100;
 	private int iconBorder = 15;
-	private IconPanel iconPanel;
+	private IconPanel[] iconPanel = new IconPanel[2];
 
 	private int ghostIconSize = iconSpace - iconBorder * 2;
 	String fileGhostBlue = "ghostBlue.png";
@@ -36,13 +35,14 @@ public class Display {
 
 	private GamePlayer game;
 
+
 	public Display(Stage primaryStage, double x, double y) throws Exception {
 		VBox display = new VBox();
 		display.setAlignment(Pos.CENTER);
-		
-		StackPane stack1 = enemyInfo();
-		StackPane stack2 = enemyInfo();
-		display.getChildren().addAll(stack2, gameBoard(), stack1);
+
+		StackPane stack1 = enemyInfo(0);
+		StackPane stack2 = enemyInfo(1);
+		display.getChildren().addAll(stack1, gameBoard(), stack2);
 
 		Stage stage = new Stage();
 		stage.initOwner(primaryStage);
@@ -54,7 +54,7 @@ public class Display {
 		stage.setTitle("Geister v3.0");
 		stage.setResizable(false);
 		stage.show();
-		
+
 		game.start();
 	}
 
@@ -62,10 +62,10 @@ public class Display {
 	/*
 	 * 敵ゴーストの死亡リストを表示する
 	 */
-	private StackPane enemyInfo() {
+	private StackPane enemyInfo(int index) {
 		SwingNode swing = new SwingNode();
-		iconPanel = new IconPanel(8, 1, iconSpace - iconBorder * 2, iconBorder);
-		swing.setContent(iconPanel);
+		iconPanel[index] = new IconPanel(8, 1, iconSpace - iconBorder * 2, iconBorder);
+		swing.setContent(iconPanel[index]);
 
 		StackPane stack = new StackPane();
 		stack.getChildren().addAll(swing);
@@ -96,17 +96,17 @@ public class Display {
 	}
 
 
-	public void setGhostCnt(boolean isBlue, int num) {
+	public void setGhostCnt(int index, boolean isBlue, int num) {
 		if (isBlue) {
 			for (int i = 0; i < 4; i++)
 				if (i < num)
-					iconPanel.setIcon(i, 0, ghostBlue);
-			iconPanel.repaint();
+					iconPanel[index].setIcon(i, 0, ghostBlue);
+			iconPanel[index].repaint();
 		} else {
 			for (int i = 4; i < 8; i++)
 				if (i - 4 < num)
-					iconPanel.setIcon(i, 0, ghostRed);
-			iconPanel.repaint();
+					iconPanel[index].setIcon(i, 0, ghostRed);
+			iconPanel[index].repaint();
 		}
 	}
 

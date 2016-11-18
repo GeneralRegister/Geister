@@ -1,40 +1,36 @@
 package controller;
 
-import ai.AI;
-import ai.Hand;
 
-
-public class Player implements Runnable {
+public abstract class Player {
 	private GameController game;
-	private AI ai;
 	private int id;
 
 
 	public Player(GameController game, int id) {
+		this.setGame(game);
+		this.setId(id);
+	}
+
+
+	public GameController getGame() {
+		return game;
+	}
+
+
+	public int getId() {
+		return id;
+	}
+
+
+	public abstract void nextHand();
+
+
+	public void setGame(GameController game) {
 		this.game = game;
+	}
+
+
+	public void setId(int id) {
 		this.id = id;
-		ai = new AI(game.getBoard(id));
-	}
-
-
-	public void nextHand() {
-		new Thread(this).start();
-	}
-
-
-	@Override
-	public void run() {
-		// 手を入力して...
-
-		Hand hand;
-		//hand = new Hand(new Point(), Direction.center);
-
-		hand = ai.nextHand();
-
-		System.out.println("AI[" + id + "]");
-
-		game.move(id, hand);
-
-		//game.move(id, hand);
 	}
 }
