@@ -13,7 +13,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
-import java.util.Scanner;
 
 import model.Board;
 import model.Direction;
@@ -62,8 +61,8 @@ public class AI {
 	 * @return 次の着手
 	 */
 	public Hand nextHand() {
-		Scanner stdIn = new Scanner(System.in);
-		stdIn.nextInt();
+		//Scanner stdIn = new Scanner(System.in);
+		//stdIn.nextInt();
 
 		try {
 			Thread.sleep(700);
@@ -99,8 +98,8 @@ public class AI {
 		double[] step = new double[2];
 		step[0] = Double.MAX_VALUE;
 		step[1] = Double.MAX_VALUE;
-		Point pA = new Point(0, 0);
-		Point pB = new Point(5, 0);
+		Point pA = new Point(-1, -1);
+		Point pB = new Point(6, -1);
 		for (int id = 0; id < 8; id++)
 			if (board.getGhost(false, id).isAlive()) {
 				Point p = board.getGhost(false, id).getPosition();
@@ -115,18 +114,19 @@ public class AI {
 		for (AIHand hand : hands) {
 			if (hand.getGhost().isBlue()) {
 				Point p = hand.getGhost().getPosition();
-				p.translate(hand.getX(), hand.getY());
+				p.translate(hand.getDirection().x(), hand.getDirection().y());
 				stepA = d1(pA, p);
 				stepB = d1(pB, p);
-				if (stepA >= step[0]) {
+				if (stepA > step[0] - 2) {
 					stepA = Double.MAX_VALUE;
 				}
-				if (stepB >= step[1]) {
+				if (stepB > step[1] - 2) {
 					stepB = Double.MAX_VALUE;
 				}
 				hand.setEValue(1 / Math.min(stepA, stepB));
 
-				System.out.println(hand.getGhost() + "--" + hand.getDirection() + "--" + p+"--"+stepA+"--"+stepB);
+				System.out
+						.println(hand.getGhost() + "--" + hand.getDirection() + "--" + p + "--" + stepA + "--" + stepB);
 			}
 		}
 

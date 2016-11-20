@@ -8,6 +8,7 @@
  */
 package model;
 
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,6 +41,21 @@ public class Board {
 		setIsGoalEnemy(false);
 		setDeadEnemyBlue(0);
 		setDeadEnemyRed(0);
+	}
+
+
+	public Board(Board o) {
+		this.enemyGhosts = o.enemyGhosts.clone();
+		this.friendGhosts = o.friendGhosts.clone();
+		board = new Ghost[height][width];
+		for (Ghost ghost : enemyGhosts)
+			board[ghost.getY()][ghost.getX()] = ghost;
+		for (Ghost ghost : friendGhosts)
+			board[ghost.getY()][ghost.getX()] = ghost;
+		this.isGoalFriend = o.isGoalFriend;
+		this.isGoalEnemy = o.isGoalEnemy;
+		this.deadEnemyBlue = o.deadEnemyBlue;
+		this.deadEnemyRed = o.deadEnemyRed;
 	}
 
 
