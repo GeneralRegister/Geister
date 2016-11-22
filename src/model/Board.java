@@ -19,8 +19,8 @@ public class Board {
 	private Ghost[] enemyGhosts;
 	private Ghost[] friendGhosts;
 	private Ghost[][] board;
-	private int height = 6;
-	private int width = 6;
+	private static int height = 6;
+	private static int width = 6;
 
 	private boolean isGoalFriend;
 	private boolean isGoalEnemy;
@@ -44,18 +44,27 @@ public class Board {
 	}
 
 
-	public Board(Board o) {
-		this.enemyGhosts = o.enemyGhosts.clone();
-		this.friendGhosts = o.friendGhosts.clone();
-		board = new Ghost[height][width];
-		for (Ghost ghost : enemyGhosts)
-			board[ghost.getY()][ghost.getX()] = ghost;
-		for (Ghost ghost : friendGhosts)
-			board[ghost.getY()][ghost.getX()] = ghost;
-		this.isGoalFriend = o.isGoalFriend;
-		this.isGoalEnemy = o.isGoalEnemy;
-		this.deadEnemyBlue = o.deadEnemyBlue;
-		this.deadEnemyRed = o.deadEnemyRed;
+	public Board clone() {
+		Board result = new Board();
+		for (int i = 0; i < 8; i++) {
+			result.enemyGhosts[i] = this.enemyGhosts[i].clone();
+			result.friendGhosts[i] = this.friendGhosts[i].clone();
+		}
+
+		result.board = new Ghost[height][width];
+		for (Ghost ghost : result.enemyGhosts)
+			if (ghost.isAlive())
+				result.board[ghost.getY()][ghost.getX()] = ghost;
+		for (Ghost ghost : result.friendGhosts)
+			if (ghost.isAlive())
+				result.board[ghost.getY()][ghost.getX()] = ghost;
+
+		result.isGoalFriend = this.isGoalFriend;
+		result.isGoalEnemy = this.isGoalEnemy;
+		result.deadEnemyBlue = this.deadEnemyBlue;
+		result.deadEnemyRed = this.deadEnemyRed;
+
+		return result;
 	}
 
 
@@ -669,5 +678,26 @@ public class Board {
 	 */
 	public void setDeadEnemyRed(int deadEnemyRed) {
 		this.deadEnemyRed = deadEnemyRed;
+	}
+
+
+	public String toString() {
+		String s = "";
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				if (isFriend(x, y))
+					if (getGhost(x, y).isBlue())
+						s += "B";
+					else
+						s += "R";
+				else if (isEnemy(x, y))
+					s += "E";
+				else
+					s += "-";
+			}
+			if (y < height - 1)
+				s += "\n";
+		}
+		return s;
 	}
 }

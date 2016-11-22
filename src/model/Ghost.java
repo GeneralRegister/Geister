@@ -67,6 +67,18 @@ public class Ghost {
 	}
 
 
+	public Ghost clone() {
+		boolean isFriend = this.isFriend;
+		int id = this.id;
+		int x = this.x;
+		int y = this.y;
+		Soul soul = this.soul;
+		Ghost result = new Ghost(isFriend, id, x, y, soul);
+		result.isAlive = this.isAlive;
+		return result;
+	}
+
+
 	public void disappear() {
 		isAlive = false;
 		setX(-1);

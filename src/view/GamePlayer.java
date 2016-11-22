@@ -8,13 +8,13 @@
  */
 package view;
 
-
 import java.awt.Point;
 
 import ai.AI;
 import application.Display;
 import controller.AIPlayer;
 import controller.GameController;
+import controller.HumanPlayer;
 import javafx.scene.input.MouseEvent;
 import model.Direction;
 
@@ -28,7 +28,11 @@ public class GamePlayer extends GamePanel implements Runnable {
 
 	private Display display;
 
-	private AI[] ai;
+	private HumanPlayer human;
+	private AIPlayer ai0;
+	private AIPlayer ai1;
+
+	private boolean humanVsAi = true;
 
 
 	public GamePlayer() {
@@ -36,11 +40,18 @@ public class GamePlayer extends GamePanel implements Runnable {
 		game = new GameController();
 		game.setPanel(this);
 
-		ai = new AI[2];
-		ai[0] = new AI(game.getBoard(0));
-		ai[1] = new AI(game.getBoard(1));
-		game.setPlayer(0, new AIPlayer(game, 0, ai[0]));
-		game.setPlayer(1, new AIPlayer(game, 1, ai[1]));
+		//プレイヤーを２つ用意
+		if (humanVsAi) {
+			human = new HumanPlayer(game, 0);
+			ai1 = new AIPlayer(game, 1, new AI(game.getBoard(1)));
+			game.setPlayer(0, human);
+			game.setPlayer(1, ai1);
+		} else {
+			ai0 = new AIPlayer(game, 0, new AI(game.getBoard(0)));
+			ai1 = new AIPlayer(game, 1, new AI(game.getBoard(1)));
+			game.setPlayer(0, ai0);
+			game.setPlayer(1, ai1);
+		}
 
 		super.init(game.getBoard(0), cellSize, border);
 	}
@@ -90,6 +101,7 @@ public class GamePlayer extends GamePanel implements Runnable {
 		int y = super.getSelect().y;
 		super.setSelect(new Point(-1, -1));
 		//game.move(x - 1, y, dir);
+		human.move(x - 1, y, dir);
 	}
 
 
@@ -97,15 +109,14 @@ public class GamePlayer extends GamePanel implements Runnable {
 		/*
 		 * 味方のゴーストを選択・解除する
 		 */
-		//if (game.getBoard().isFriend(p.x - 1, p.y)) {
-		//	selectSelect(p);
-		//	repaint();
-		//}
+		if (game.getBoard(0).isFriend(p.x - 1, p.y)) {
+			selectSelect(p);
+			repaint();
+		}
 
 		/*
 		 * 味方のゴーストが選択されている場合，その四近傍を選択すると，移動メソッドを呼ぶ．
 		 */
-		/*
 		Point select = super.getSelect();
 		if (!select.equals(new Point(-1, -1))) {
 			if (p.equals(new Point(select.x, select.y - 1)))
@@ -117,12 +128,12 @@ public class GamePlayer extends GamePanel implements Runnable {
 			if (p.equals(new Point(select.x - 1, select.y)))
 				selectAction(Direction.left);
 		}
-		*/
 	}
 
 
 	public void mousePressed(MouseEvent event) {
-		select(new Point((int) event.getX() / outerCellSize, (int) event.getY() / outerCellSize));
+		if (humanVsAi)
+			select(new Point((int) event.getX() / outerCellSize, (int) event.getY() / outerCellSize));
 	}
 
 
