@@ -1,11 +1,3 @@
-/**
- * Geister v3.0
- *
- * Copyright (c) 2016 tatsumi
- *
- * This software is released under the MIT License.
- * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
- */
 package model;
 
 
@@ -62,7 +54,7 @@ public class Ghost {
 		isAlive = true;
 		setX(x);
 		setY(y);
-		this.soul = soul;
+		setSoul(soul);
 		this.id = id;
 	}
 
@@ -149,6 +141,16 @@ public class Ghost {
 
 	public void setY(int y) {
 		this.y = y;
+	}
+
+
+	public Soul getSoul() {
+		return soul;
+	}
+
+
+	public void setSoul(Soul soul) {
+		this.soul = soul;
 	}
 
 

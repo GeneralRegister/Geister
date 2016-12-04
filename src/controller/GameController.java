@@ -13,6 +13,7 @@ import java.util.Random;
 
 import model.Board;
 import model.Hand;
+import model.Soul;
 import view.GamePlayer;
 
 
@@ -40,7 +41,7 @@ public class GameController {
 	}
 
 
-	public boolean getPlaying() {
+	public boolean isPlaying() {
 		return playing;
 	}
 
@@ -63,7 +64,7 @@ public class GameController {
 
 	// #ゲームシーケンス
 	public void move(int player, Hand hand) {
-		if (!getPlaying()) {
+		if (!isPlaying()) {
 			// ゲームが終了している．．．
 			return;
 		} else if (!isMyTurn(player)) {
@@ -83,23 +84,21 @@ public class GameController {
 		// 相手の盤面を自分の着手の逆で反映させる．．．
 		board[opponent].move(hand.reverse());
 
-		// 相手の盤面の死亡リストを取る．．．
-		int db = board[opponent].getDeadFriendBlue();
-		int dr = board[opponent].getDeadFriendRed();
-
 		// 相手の盤面の死亡リストを自分の盤に反映させる．．．
-		board[player].setDeadEnemyBlue(db);
-		board[player].setDeadEnemyRed(dr);
+		for (int id = 0; id < 8; id++) {
+			Soul soul = board[opponent].getDeadFriendSoul(7 - id);
+			board[player].setEnemySoul(id, soul);
+		}
 
 		// 死亡リストを表示
-		gamePanel.setGhostCnt(player, true, db);
-		gamePanel.setGhostCnt(player, false, dr);
+		gamePanel.setGhostCnt(opponent, true, board[opponent].getDeadFriendBlue());
+		gamePanel.setGhostCnt(opponent, false, board[opponent].getDeadFriendRed());
 
 		repaint();
 
 		judge();
 
-		if (getPlaying()) {
+		if (isPlaying()) {
 			playerChange();
 		} else {
 			nextPlayer = -1;
@@ -119,7 +118,7 @@ public class GameController {
 
 	// #ゲームシーケンス
 	public void next() {
-		if (getPlaying()) {
+		if (isPlaying()) {
 			player[nextPlayer].nextHand();
 		} else {
 			// ゲームが終了している．．．

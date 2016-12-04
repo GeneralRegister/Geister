@@ -8,6 +8,7 @@
  */
 package application;
 
+
 import javafx.embed.swing.SwingNode;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -40,8 +41,8 @@ public class Display {
 		VBox display = new VBox();
 		display.setAlignment(Pos.CENTER);
 
-		StackPane stack1 = enemyInfo(0);
-		StackPane stack2 = enemyInfo(1);
+		StackPane stack1 = enemyInfo(1);
+		StackPane stack2 = enemyInfo(0);
 		display.getChildren().addAll(stack1, gameBoard(), stack2);
 
 		Stage stage = new Stage();

@@ -1,11 +1,3 @@
-/**
- * Geister v3.0
- *
- * Copyright (c) 2016 tatsumi
- *
- * This software is released under the MIT License.
- * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
- */
 package model;
 
 
@@ -24,8 +16,6 @@ public class Board {
 
 	private boolean isGoalFriend;
 	private boolean isGoalEnemy;
-	private int deadEnemyBlue;
-	private int deadEnemyRed;
 
 
 	public Board() {
@@ -39,8 +29,6 @@ public class Board {
 
 		setIsGoalFriend(false);
 		setIsGoalEnemy(false);
-		setDeadEnemyBlue(0);
-		setDeadEnemyRed(0);
 	}
 
 
@@ -61,8 +49,6 @@ public class Board {
 
 		result.isGoalFriend = this.isGoalFriend;
 		result.isGoalEnemy = this.isGoalEnemy;
-		result.deadEnemyBlue = this.deadEnemyBlue;
-		result.deadEnemyRed = this.deadEnemyRed;
 
 		return result;
 	}
@@ -88,6 +74,21 @@ public class Board {
 		for (int y = 4; y <= 5; y++)
 			for (int x = 1; x <= 4; x++)
 				friendGhosts[num] = new Ghost(true, num, x, y, soul.get(num++));
+	}
+
+
+	/**
+	 * 全ての可能着手を返す．
+	 *
+	 * @return 全ての可能着手
+	 */
+	public ArrayList<Hand> posNextHandList(boolean isFriend) {
+		ArrayList<Hand> hands = new ArrayList<Hand>();
+		for (int id = 0; id < 8; id++)
+			for (Direction dir : Direction.values())
+				if (canMove(isFriend, id, dir))
+					hands.add(new Hand(getGhost(isFriend, id).getPosition(), dir));
+		return hands;
 	}
 
 
@@ -135,8 +136,6 @@ public class Board {
 	/**
 	 * 指定のゴーストで指定の方向に移動できるかを判定する．条件によって出口へ移動できる．移動できる場合，trueを返す．
 	 *
-	 * @since 3.0.0
-	 *
 	 * @param ghost ゴースト
 	 * @param dir 方向
 	 * @return 移動出来た場合，true
@@ -160,8 +159,6 @@ public class Board {
 
 	/**
 	 * ゴーストで指定の盤面を占領できる場合，trueを返す．
-	 *
-	 * @since 3.0.0
 	 *
 	 * @param ghost ゴースト
 	 * @param x x座標
@@ -190,8 +187,6 @@ public class Board {
 	/**
 	 * ゴーストでゴールを占領できる場合，trueを返す．
 	 *
-	 * @since 3.0.0
-	 *
 	 * @param ghost ゴースト
 	 * @param x x座標
 	 * @param y y座標
@@ -208,7 +203,12 @@ public class Board {
 				}
 			}
 		} else {
-			return true;
+			// ※敵ゴーストの色は判断できないことに注意！！
+			if (!ghost.isRed()) {
+				if (isEnemyGoal(x, y)) {
+					return true;
+				}
+			}
 		}
 
 		return false;
@@ -277,7 +277,11 @@ public class Board {
 	 * @return 消滅した敵の青いゴーストの数
 	 */
 	public int getDeadEnemyBlue() {
-		return deadEnemyBlue;
+		int cnt = 0;
+		for (int i = 0; i < 8; i++)
+			if (enemyGhosts[i].isDead() && enemyGhosts[i].isBlue())
+				cnt++;
+		return cnt;
 	}
 
 
@@ -287,7 +291,11 @@ public class Board {
 	 * @return 消滅した敵の赤いゴーストの数
 	 */
 	public int getDeadEnemyRed() {
-		return deadEnemyRed;
+		int cnt = 0;
+		for (int i = 0; i < 8; i++)
+			if (enemyGhosts[i].isDead() && enemyGhosts[i].isRed())
+				cnt++;
+		return cnt;
 	}
 
 
@@ -302,6 +310,28 @@ public class Board {
 		if (isOnScreen(x, y))
 			return board[y][x];
 		return null;
+	}
+
+
+	/**
+	 * 指定した敵ゴーストを取り出す．idが不適切な場合，nullを返す．
+	 *
+	 * @param id ゴースト番号
+	 * @return ゴースト
+	 */
+	public Ghost getGhostEnemy(int id) {
+		return getGhost(false, id);
+	}
+
+
+	/**
+	 * 指定した味方ゴーストを取り出す．idが不適切な場合，nullを返す．
+	 *
+	 * @param id ゴースト番号
+	 * @return ゴースト
+	 */
+	public Ghost getGhostFriend(int id) {
+		return getGhost(true, id);
 	}
 
 
@@ -405,6 +435,7 @@ public class Board {
 
 	/**
 	 * 指定した座標が出口であるか判定する．出口である場合，trueを返す．
+	 * 出口とは，ゴールに隣接するマスである．
 	 *
 	 * @param x x座標
 	 * @param y y座標
@@ -477,7 +508,7 @@ public class Board {
 			return true;
 
 		// 勝ち条件2...相手の「悪いオバケ」を全部相手に取る
-		if (deadEnemyRed == 4)
+		if (getDeadEnemyRed() == 4)
 			return true;
 
 		// 勝ち条件3...相手の「良いオバケ」のひとつが自分側脱出口から外に出る
@@ -507,7 +538,7 @@ public class Board {
 	 */
 	public boolean isWin() {
 		// 勝ち条件1...相手の「良いオバケ」を全部取る
-		if (deadEnemyBlue == 4)
+		if (getDeadEnemyBlue() == 4)
 			return true;
 
 		// 勝ち条件2...自分の「悪いオバケ」が全部相手に取られる
@@ -628,10 +659,15 @@ public class Board {
 				}
 			}
 		} else {
-			setIsGoalEnemy(true);
-			board[ghost.getY()][ghost.getX()] = null;
-			ghost.setPosition(-1, -1);
-			return true;
+			// ※敵ゴーストの色は判断できないことに注意！！
+			if (!ghost.isRed()) {
+				if (isEnemyGoal(x, y)) {
+					setIsGoalEnemy(true);
+					board[ghost.getY()][ghost.getX()] = null;
+					ghost.setPosition(-1, -1);
+					return true;
+				}
+			}
 		}
 
 		return false;
@@ -649,35 +685,25 @@ public class Board {
 
 
 	/**
-	 * 消滅した敵の指定の色のゴーストの数を設定する．
+	 * 敵のゴーストの色を設定する．
 	 *
 	 * @param deadEnemyBlue 消滅した敵の指定の色のゴーストの数
 	 */
-	public void setDeadEnemy(boolean isBlue, int deadEnemy) {
-		if (isBlue)
-			setDeadEnemyBlue(deadEnemy);
-		else
-			setDeadEnemyRed(deadEnemy);
+	public void setEnemySoul(int id, Soul soul) {
+		getGhost(false, id).setSoul(soul);
 	}
 
 
 	/**
-	 * 消滅した敵の青いゴーストの数を設定する．
+	 * 消滅している味方のゴーストの色を返す．ただし，生きている場合は，unknownを返す．
 	 *
-	 * @param deadEnemyBlue 消滅した敵の青いゴーストの数
+	 * @param deadEnemyBlue 消滅した敵の指定の色のゴーストの数
 	 */
-	public void setDeadEnemyBlue(int deadEnemyBlue) {
-		this.deadEnemyBlue = deadEnemyBlue;
-	}
-
-
-	/**
-	 * 消滅した敵の赤いゴーストの数を設定する．
-	 *
-	 * @param deadEnemyRed 消滅した敵の赤いゴーストの数
-	 */
-	public void setDeadEnemyRed(int deadEnemyRed) {
-		this.deadEnemyRed = deadEnemyRed;
+	public Soul getDeadFriendSoul(int id) {
+		if (getGhost(true, id).isDead()) {
+			return getGhost(true, id).getSoul();
+		}
+		return Soul.unknown;
 	}
 
 

@@ -1,11 +1,3 @@
-/**
- * Geister v3.0
- *
- * Copyright (c) 2016 tatsumi
- *
- * This software is released under the MIT License.
- * https://github.com/GeneralRegister/Geister/blob/master/LICENSE
- */
 package ai;
 
 
@@ -48,11 +40,11 @@ public class AI {
 	 * @return 着手
 	 */
 	public Hand nextHand() {
-		try {
-			Thread.sleep(700);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		//		try {
+		//			Thread.sleep(700);
+		//		} catch (InterruptedException e) {
+		//			e.printStackTrace();
+		//		}
 		return testNextHand();
 	}
 
@@ -81,8 +73,13 @@ public class AI {
 		for (AIHand hand : hands)
 			hand.evaluate(board);
 
-		Collections.shuffle(hands);
 		Collections.sort(hands);
+
+		for (AIHand hand : hands)
+			System.out.println(hand);
+
+		System.out.println("-----------------------------------");
+
 		return hands.get(hands.size() - 1);
 	}
 }

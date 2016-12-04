@@ -2,11 +2,14 @@ package ai;
 
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Random;
 
 import model.Board;
 import model.Direction;
 import model.Ghost;
 import model.Hand;
+import model.Soul;
 
 
 public class AIHand extends Hand implements Comparable<AIHand> {
@@ -39,48 +42,56 @@ public class AIHand extends Hand implements Comparable<AIHand> {
 	}
 
 
+	// モンテカルロ法により，勝ち確率を評価
 	public void evaluate(Board origin) {
-		Board copy = origin.clone();
-		copy.move(this);
-		this.eValue = evalueDiffense(copy) + evalueOffense(copy);
+		// シミュレート回数
+		int tmax = 1000;
+		// 勝ち回数
+		int win = 0;
+		for (int i = 0; i < tmax; i++) {
+			if (simulateRandom(origin.clone(), this)) {
+				win++;
+			}
+		}
+
+		setEValue((double) win / tmax);
 	}
 
 
-	public double evalueDiffense(Board copy) {
-		double ev = 0;
-		double u = 1;
-		for (int id = 0; id < 8; id++) {
-			Ghost ghost = copy.getGhost(true, id);
-			if (ghost.isAlive()) {
-				double c = d1(new Point(-1, 6), ghost.getPosition());
-				double d = d1(new Point(6, 6), ghost.getPosition());
-				double v = 1 / Math.min(c, d);
-				for (Direction dir : Direction.values())
-					if (copy.isEnemy(ghost.getX() + dir.x(), ghost.getY() + dir.y()))
-						v *= u;
-				ev += v;
-			}
-		}
-		return ev;
-	}
+	// Board の敵の色をランダムに設定し，ランダムに進行するゲームで最終的に勝てたか返す．ただし，最初の手は Hand である．
+	public boolean simulateRandom(Board virtual, Hand hand) {
+		// 盤面で未だ消滅していない敵の色をランダムに設定（予測できたら良いな．．．）
+		int unkB = 4 - virtual.getDeadEnemyBlue();
+		int unkR = 4 - virtual.getDeadEnemyRed();
+		ArrayList<Integer> aliveList = new ArrayList<Integer>();
+		for (int id = 0; id < 8; id++)
+			if (virtual.getGhostEnemy(id).isAlive())
+				aliveList.add(id);
+		Random rand = new Random();
+		for (int i = 0; i < unkB; i++)
+			virtual.getGhostEnemy(aliveList.remove(rand.nextInt(aliveList.size()))).setSoul(Soul.blue);
+		for (int i = 0; i < unkR; i++)
+			virtual.getGhostEnemy(aliveList.remove(rand.nextInt(aliveList.size()))).setSoul(Soul.red);
 
+		// TODO シミュレートせよ
+		// 味方の着手 Hand から
+		boolean player = true;
+		virtual.move(hand);
 
-	public double evalueOffense(Board copy) {
-		double ev = 0;
-		double u = 1;
-		for (int id = 0; id < 8; id++) {
-			Ghost ghost = copy.getGhost(true, id);
-			if (ghost.isAlive()) {
-				double a = d1(new Point(-1, -1), ghost.getPosition());
-				double b = d1(new Point(6, -1), ghost.getPosition());
-				double v = 1 / Math.min(a, b);
-				for (Direction dir : Direction.values())
-					if (copy.isEnemy(ghost.getX() + dir.x(), ghost.getY() + dir.y()))
-						v *= u;
-				ev += v;
-			}
+		while (true) {
+			// 勝敗が付いたら終了！！
+			if (virtual.isWin())
+				return true;
+			if (virtual.isLoss())
+				return false;
+
+			// プレーヤ交代
+			player = !player;
+			// 可能着手
+			ArrayList<Hand> list = virtual.posNextHandList(player);
+			// ランダムな着手
+			virtual.move(list.get(rand.nextInt(list.size())));
 		}
-		return ev;
 	}
 
 
@@ -96,5 +107,10 @@ public class AIHand extends Hand implements Comparable<AIHand> {
 
 	public void setEValue(double eValue) {
 		this.eValue = eValue;
+	}
+
+
+	public String toString() {
+		return super.toString() + ", " + String.format("%.4f", getEValue());
 	}
 }
